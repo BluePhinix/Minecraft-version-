@@ -1,0 +1,38 @@
+name: Minecraft Version Tracker
+
+on:
+  schedule:
+    - cron: '0 */12 * * *'
+  workflow_dispatch:
+
+jobs:
+  track-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get current date and time
+        id: date
+        run: echo "datetime=$(date -u)" >> $GITHUB_OUTPUT
+
+      - name: Fetch Minecraft versions
+        id: mc_versions
+        run: |
+          MANIFEST_URL="https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
+          JAVA_LATEST=$(curl -s $MANIFEST_URL | jq -r '.latest.release')
+          JAVA_PREVIEW=$(curl -s $MANIFEST_URL | jq -r '.latest.snapshot')
+          BEDROCK_URL="https://raw.githubusercontent.com/Mojang/bedrock-samples/main/version.json"
+          BEDROCK_LATEST=$(curl -s $BEDROCK_URL | jq -r '.latest')
+          BEDROCK_BETA=$(curl -s $BEDROCK_URL | jq -r '.beta')
+          echo "java_latest=$JAVA_LATEST" >> $GITHUB_OUTPUT
+          echo "java_preview=$JAVA_PREVIEW" >> $GITHUB_OUTPUT
+          echo "bedrock_latest=$BEDROCK_LATEST" >> $GITHUB_OUTPUT
+          echo "bedrock_beta=$BEDROCK_BETA" >> $GITHUB_OUTPUT
+
+      - name: Display versions
+        run: |
+          echo "🕒 Current Date/Time: ${{ steps.date.outputs.datetime }}"
+          echo ""
+          echo "🎮 Minecraft Version Info:"
+          echo "   Java Edition (latest release)   : ${{ steps.mc_versions.outputs.java_latest }}"
+          echo "   Java Preview (snapshot)         : ${{ steps.mc_versions.outputs.java_preview }}"
+          echo "   Bedrock Edition (latest release): ${{ steps.mc_versions.outputs.bedrock_latest }}"
+          echo "   Bedrock Beta                     : ${{ steps.mc_versions.outputs.bedrock_beta }}"
